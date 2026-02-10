@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  external-endpoint:
+    build:
+      context: .
+      dockerfile: services/external-endpoint/Dockerfile
+    container_name: external-endpoint
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+    networks:
+      - integration-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  middleware:
+    build:
+      context: .
+      dockerfile: services/middleware/Dockerfile
+    container_name: middleware
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - EXTERNAL_ENDPOINT_URL=http://external-endpoint:8081/external/alerts
+      - QUEUE_SIZE=1000
+      - WORKER_COUNT=10
+      - HTTP_TIMEOUT=3s
+      - MAX_RETRIES=3
+      - BASE_DELAY=500ms
+    depends_on:
+      - external-endpoint
+    networks:
+      - integration-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+networks:
+  integration-network:
+    driver: bridge
