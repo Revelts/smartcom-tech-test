@@ -1,11 +1,6 @@
-# Integration Platform - Microservices Monorepo
-
-A production-grade Go microservices platform for processing and routing integration events. Built with clean architecture principles, this system demonstrates how to build independently deployable services within a single monorepo.
-
 ## Table of Contents
 
 - [Architecture Overview](#architecture-overview)
-- [Why Microservices in a Monorepo](#why-microservices-in-a-monorepo)
 - [Service Boundaries](#service-boundaries)
 - [Event Flow](#event-flow)
 - [Concurrency Model](#concurrency-model)
@@ -29,33 +24,6 @@ Both services follow Clean Architecture principles:
 - **Use Case Layer**: Application-specific business rules
 - **Interface Adapters**: HTTP handlers, repositories, infrastructure
 - **Infrastructure**: External dependencies (HTTP clients, databases, etc.)
-
-## Why Microservices in a Monorepo
-
-### Benefits of Microservices
-
-- **Independent Deployment**: Each service can be deployed without affecting others
-- **Isolated Failures**: A failure in one service doesn't cascade to others
-- **Technology Flexibility**: Services can use different tech stacks if needed
-- **Team Autonomy**: Different teams can own different services
-- **Scalability**: Scale services independently based on load
-
-### Benefits of Monorepo
-
-- **Shared Code**: Common utilities (logger, HTTP client, config) in `/pkg`
-- **Atomic Changes**: Update shared dependencies across all services in one commit
-- **Code Reuse**: Avoid code duplication across services
-- **Simplified Development**: Single checkout, unified tooling
-- **Easier Refactoring**: Cross-service refactoring is straightforward
-- **Consistent Standards**: Enforce coding standards across all services
-
-### Best of Both Worlds
-
-The monorepo structure provides shared infrastructure while maintaining strict service boundaries:
-- Services CANNOT import each other's internal packages
-- Shared code ONLY through `/pkg`
-- Each service has its own lifecycle, configuration, and build
-- Easy to add new microservices without creating new repositories
 
 ## Service Boundaries
 
@@ -828,8 +796,3 @@ make build-external
 ## License
 
 This project is for evaluation purposes.
-
-## Contact
-
-For questions or issues, please contact the development team.
-# smartcom-tech-test
