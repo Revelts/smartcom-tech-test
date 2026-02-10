@@ -303,32 +303,52 @@ cd ../external-endpoint && go mod tidy
 
 Deploy to separate VMs in production (optimized for Asia regions).
 
-#### 📖 Choose Your Deployment Method
+#### 🐳 Docker Deployment (⭐ Recommended)
 
-**Not sure which to use?** → Start with **[DEPLOYMENT_OPTIONS.md](DEPLOYMENT_OPTIONS.md)**
+**Already have VMs? Deploy with Docker!**
+```bash
+# Quick Docker deployment guide
+open DOCKER_QUICKSTART.md
 
-**Manual Deployment** (⭐ Recommended for Production & Learning):
+# Or see complete guide
+open DOCKER_VM_DEPLOYMENT.md
+```
+
+**Why Docker?**
+- ✅ Easy to update (rebuild & replace container)
+- ✅ Auto-restart on crash or reboot
+- ✅ Full isolation between services
+- ✅ Accessible from outside (port mapping)
+
+#### 📖 Other Deployment Methods
+
+**Manual Deployment with Systemd** (Learning & Custom Setup):
 ```bash
 # Complete step-by-step guide with NO automation scripts
 # Full control, easy troubleshooting, production-ready
 open GCP_MANUAL_DEPLOYMENT.md
 ```
 
-**Automated Deployment** (Quick Testing):
+**Automated Deployment Script** (Quick VM Setup):
 ```bash
-# One command deployment - deployed in 5-10 minutes
+# One command deployment - creates VMs and deploys services
 # Defaults to Singapore (asia-southeast1-a)
 ./deploy-gcp.sh
 ```
+
+**Not sure which to use?** → See **[DEPLOYMENT_OPTIONS.md](DEPLOYMENT_OPTIONS.md)**
 
 #### 📚 Complete GCP Documentation
 
 | Guide | Purpose | Time |
 |-------|---------|------|
+| **[DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md)** | 🐳 Docker deployment (recommended) | 5-10 min |
+| **[DOCKER_VM_DEPLOYMENT.md](DOCKER_VM_DEPLOYMENT.md)** | Complete Docker guide | 15-20 min |
+| **[VM_DEPLOYMENT_GUIDE.md](VM_DEPLOYMENT_GUIDE.md)** | Your specific VMs guide | Reference |
+| **[GCP_MANUAL_DEPLOYMENT.md](GCP_MANUAL_DEPLOYMENT.md)** | Manual step-by-step (systemd) | 30-45 min |
 | **[GCP_DEPLOYMENT_INDEX.md](GCP_DEPLOYMENT_INDEX.md)** | Documentation overview | 5 min |
 | **[DEPLOYMENT_OPTIONS.md](DEPLOYMENT_OPTIONS.md)** | Choose deployment method | 10 min |
-| **[GCP_MANUAL_DEPLOYMENT.md](GCP_MANUAL_DEPLOYMENT.md)** | Manual step-by-step (no scripts) | 30-45 min |
-| **[GCP_QUICKSTART.md](GCP_QUICKSTART.md)** | Automated quick start | 5-10 min |
+| **[GCP_QUICKSTART.md](GCP_QUICKSTART.md)** | Automated script deployment | 5-10 min |
 | **[GCP_ASIA_ZONES.md](GCP_ASIA_ZONES.md)** | Asia region selection | 10 min |
 | **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** | Production checklist | During deployment |
 
