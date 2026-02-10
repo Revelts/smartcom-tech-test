@@ -303,22 +303,110 @@ cd ../external-endpoint && go mod tidy
 
 Deploy to separate VMs in production (optimized for Asia regions).
 
+```
+┌─────────────────────────────────────────────────────────┐
+│          GCP Docker Deployment Architecture             │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  Your Local Machine                                     │
+│      │                                                  │
+│      ├─> Upload Scripts ──> VM1 (Middleware)           │
+│      │                      └─> Docker Container:8080  │
+│      │                                                  │
+│      └─> Upload Scripts ──> VM2 (External Endpoint)    │
+│                             └─> Docker Container:8081  │
+│                                                         │
+│  Accessible from anywhere via public IPs!              │
+└─────────────────────────────────────────────────────────┘
+```
+
 #### 🐳 Docker Deployment (⭐ Recommended)
 
-**Already have VMs? Deploy with Docker!**
-```bash
-# Quick Docker deployment guide
-open DOCKER_QUICKSTART.md
+**Already have VMs? Deploy with Docker in 3 steps!**
 
-# Or see complete guide
-open DOCKER_VM_DEPLOYMENT.md
+##### Step 1: Upload Deployment Scripts to VMs
+
+```bash
+# Upload to External Endpoint VM
+gcloud compute scp deploy-external-docker.sh external-ep:~ --zone=asia-southeast2-a
+
+# Upload to Middleware VM
+gcloud compute scp deploy-middleware-docker.sh middleware:~ --zone=asia-southeast2-a
 ```
+
+##### Step 2: Deploy External Endpoint Service (VM2)
+
+```bash
+# SSH into External Endpoint VM
+gcloud compute ssh external-ep --zone=asia-southeast2-a
+
+# Run deployment script
+chmod +x deploy-external-docker.sh
+./deploy-external-docker.sh
+
+# Exit VM
+exit
+```
+
+##### Step 3: Deploy Middleware Service (VM1)
+
+```bash
+# SSH into Middleware VM
+gcloud compute ssh middleware --zone=asia-southeast2-a
+
+# Run deployment script
+chmod +x deploy-middleware-docker.sh
+./deploy-middleware-docker.sh
+
+# Exit VM
+exit
+```
+
+##### Test Your Deployment
+
+```bash
+# Test External Endpoint
+curl http://YOUR_EXTERNAL_IP:8081/health
+
+# Test Middleware
+curl http://YOUR_MIDDLEWARE_IP:8080/health
+
+# Send test event
+curl -X POST http://YOUR_MIDDLEWARE_IP:8080/integrations/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source": "docker-test",
+    "event_type": "deployment_test",
+    "severity": "critical",
+    "message": "Testing Docker deployment"
+  }'
+```
+
+**What the scripts do:**
+- ✅ Install Docker (if not already installed)
+- ✅ Pull latest code from git
+- ✅ Build Docker images
+- ✅ Run containers with auto-restart
+- ✅ Configure port mapping (accessible from outside!)
+- ✅ Set all environment variables
 
 **Why Docker?**
 - ✅ Easy to update (rebuild & replace container)
 - ✅ Auto-restart on crash or reboot
 - ✅ Full isolation between services
 - ✅ Accessible from outside (port mapping)
+
+**For detailed documentation:**
+```bash
+# Quick start guide
+open DOCKER_QUICKSTART.md
+
+# Complete Docker guide
+open DOCKER_VM_DEPLOYMENT.md
+
+# Step-by-step deployment
+open DEPLOY_NOW.md
+```
 
 #### 📖 Other Deployment Methods
 
@@ -342,9 +430,10 @@ open GCP_MANUAL_DEPLOYMENT.md
 
 | Guide | Purpose | Time |
 |-------|---------|------|
-| **[DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md)** | 🐳 Docker deployment (recommended) | 5-10 min |
-| **[DOCKER_VM_DEPLOYMENT.md](DOCKER_VM_DEPLOYMENT.md)** | Complete Docker guide | 15-20 min |
-| **[VM_DEPLOYMENT_GUIDE.md](VM_DEPLOYMENT_GUIDE.md)** | Your specific VMs guide | Reference |
+| **[DEPLOY_NOW.md](DEPLOY_NOW.md)** | 🚀 Quick deploy guide for existing VMs | 10 min |
+| **[DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md)** | 🐳 Docker deployment quick reference | 5-10 min |
+| **[DOCKER_VM_DEPLOYMENT.md](DOCKER_VM_DEPLOYMENT.md)** | Complete Docker deployment guide | 15-20 min |
+| **[VM_DEPLOYMENT_GUIDE.md](VM_DEPLOYMENT_GUIDE.md)** | VM-specific deployment guide | Reference |
 | **[GCP_MANUAL_DEPLOYMENT.md](GCP_MANUAL_DEPLOYMENT.md)** | Manual step-by-step (systemd) | 30-45 min |
 | **[GCP_DEPLOYMENT_INDEX.md](GCP_DEPLOYMENT_INDEX.md)** | Documentation overview | 5 min |
 | **[DEPLOYMENT_OPTIONS.md](DEPLOYMENT_OPTIONS.md)** | Choose deployment method | 10 min |
@@ -352,7 +441,152 @@ open GCP_MANUAL_DEPLOYMENT.md
 | **[GCP_ASIA_ZONES.md](GCP_ASIA_ZONES.md)** | Asia region selection | 10 min |
 | **[DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)** | Production checklist | During deployment |
 
+#### 🎯 Quick Reference for VM Deployment
+
+**Prerequisites:**
+- VMs created in GCP (any region)
+- Code repository on VMs (via git)
+- Firewall rules allowing ports 8080 and 8081
+
+**Essential Commands:**
+
+```bash
+# Upload deployment scripts
+gcloud compute scp deploy-external-docker.sh external-ep:~ --zone=YOUR_ZONE
+gcloud compute scp deploy-middleware-docker.sh middleware:~ --zone=YOUR_ZONE
+
+# Deploy External Endpoint
+gcloud compute ssh external-ep --zone=YOUR_ZONE
+./deploy-external-docker.sh && exit
+
+# Deploy Middleware
+gcloud compute ssh middleware --zone=YOUR_ZONE
+./deploy-middleware-docker.sh && exit
+
+# View logs
+docker logs -f middleware
+
+# Restart service
+docker restart middleware
+
+# Update service
+cd ~/smartcom-tech-test && git pull
+docker stop middleware && docker rm middleware
+./deploy-middleware-docker.sh
+```
+
+**Troubleshooting:**
+- **Service not accessible from outside?**
+  ```bash
+  # Check firewall rules exist
+  gcloud compute firewall-rules list --filter="name~middleware"
+  
+  # Create if missing
+  gcloud compute firewall-rules create allow-middleware \
+    --direction=INGRESS --priority=1000 --network=default \
+    --action=ALLOW --rules=tcp:8080 --source-ranges=0.0.0.0/0 \
+    --target-tags=middleware
+  
+  # Add network tag to VM
+  gcloud compute instances add-tags middleware \
+    --tags=middleware --zone=YOUR_ZONE
+  ```
+
+- **Container won't start?** 
+  ```bash
+  docker logs middleware
+  ```
+
+- **Need to rebuild?** 
+  ```bash
+  ./deploy-middleware-docker.sh
+  ```
+
+- **Test connectivity from inside VM:**
+  ```bash
+  gcloud compute ssh middleware --zone=YOUR_ZONE
+  curl http://localhost:8080/health
+  docker ps
+  exit
+  ```
+
 **Default Region**: Singapore (`asia-southeast1-a`) - Optimized for Southeast Asia with excellent connectivity.
+
+---
+
+### Managing Docker Containers on VMs
+
+After deployment, manage your containers with these commands:
+
+#### View Logs
+
+```bash
+# From your local machine
+gcloud compute ssh middleware --zone=YOUR_ZONE \
+  --command="docker logs -f middleware"
+
+# Or SSH into VM and run
+docker logs -f middleware
+docker logs -f external-endpoint
+```
+
+#### Restart Services
+
+```bash
+# Restart Middleware
+gcloud compute ssh middleware --zone=YOUR_ZONE \
+  --command="docker restart middleware"
+
+# Restart External Endpoint
+gcloud compute ssh external-ep --zone=YOUR_ZONE \
+  --command="docker restart external-endpoint"
+```
+
+#### Check Container Status
+
+```bash
+# From your local machine
+gcloud compute ssh middleware --zone=YOUR_ZONE \
+  --command="docker ps"
+
+# Or SSH into VM and run
+docker ps
+```
+
+#### Update Services (After Code Changes)
+
+```bash
+# SSH into VM
+gcloud compute ssh middleware --zone=YOUR_ZONE
+
+# Pull latest code
+cd ~/smartcom-tech-test && git pull
+
+# Stop and remove old container
+docker stop middleware && docker rm middleware
+
+# Rebuild and run
+docker build -f services/middleware/Dockerfile -t middleware .
+docker run -d --name middleware --restart always \
+  -p 8080:8080 \
+  -e PORT=8080 \
+  -e EXTERNAL_ENDPOINT_URL=http://INTERNAL_IP:8081/external/alerts \
+  -e QUEUE_SIZE=1000 -e WORKER_COUNT=10 \
+  -e HTTP_TIMEOUT=3s -e MAX_RETRIES=3 -e BASE_DELAY=500ms \
+  middleware
+
+exit
+```
+
+**Or simply re-run the deployment script:**
+
+```bash
+gcloud compute ssh middleware --zone=YOUR_ZONE
+./deploy-middleware-docker.sh
+exit
+```
+
+---
 
 ## Running Services Locally
 
