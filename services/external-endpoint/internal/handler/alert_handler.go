@@ -43,6 +43,14 @@ func (h *AlertHandler) HandleAlert(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "received"})
 }
 
+func (h *AlertHandler) HandleHealth(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "healthy",
+		"service": "external-endpoint",
+	})
+}
+
 func (h *AlertHandler) RegisterRoutes(router *gin.Engine) {
+	router.GET("/health", h.HandleHealth)
 	router.POST("/external/alerts", h.HandleAlert)
 }

@@ -9,6 +9,7 @@
 - [Getting Started](#getting-started)
 - [Running Services](#running-services)
 - [Configuration](#configuration)
+- [API Endpoints](#api-endpoints)
 - [Testing](#testing)
 - [Future Improvements](#future-improvements)
 
@@ -482,6 +483,37 @@ docker stop middleware && docker rm middleware
 
 ---
 
+### Deployed Services
+
+The services are currently deployed on GCP in the `asia-southeast2-a` zone:
+
+| Service | Internal IP | External IP | Port |
+|---------|-------------|-------------|------|
+| **external-ep** | 10.184.0.4 | 34.50.103.62 | 8081 |
+| **middleware** | 10.184.0.3 | 34.128.100.247 | 8080 |
+
+**Quick Test Commands:**
+
+```bash
+# Test External Endpoint health
+curl http://34.50.103.62:8081/health
+
+# Test Middleware health
+curl http://34.128.100.247:8080/health
+
+# Send test event to Middleware
+curl -X POST http://34.128.100.247:8080/integrations/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source": "test-client",
+    "event_type": "test_event",
+    "severity": "critical",
+    "message": "Testing deployed services"
+  }'
+```
+
+---
+
 ### Managing Docker Containers on VMs
 
 After deployment, manage your containers with these commands:
@@ -701,6 +733,76 @@ make build-external
 # Binaries created in ./bin/
 ./bin/middleware
 ./bin/external-endpoint
+```
+
+## API Endpoints
+
+### Middleware Service (Port 8080)
+
+#### Health Check
+```bash
+GET /health
+
+# Response
+{
+  "status": "healthy",
+  "service": "middleware"
+}
+```
+
+#### Submit Event
+```bash
+POST /integrations/events
+
+# Request
+{
+  "source": "monitoring-system",
+  "event_type": "server_down",
+  "severity": "critical",
+  "message": "Production server is not responding",
+  "metadata": {
+    "server_id": "prod-web-01"
+  }
+}
+
+# Response
+{
+  "status": "accepted",
+  "event_id": "746886104855471628dae9354b3b7a5f",
+  "correlation_id": "5e4f2e134bb35f6de89bb4307c9160e5"
+}
+```
+
+### External Endpoint Service (Port 8081)
+
+#### Health Check
+```bash
+GET /health
+
+# Response
+{
+  "status": "healthy",
+  "service": "external-endpoint"
+}
+```
+
+#### Receive Alert
+```bash
+POST /external/alerts
+
+# Request
+{
+  "event_id": "746886104855471628dae9354b3b7a5f",
+  "priority": "critical",
+  "message": "Production server is not responding",
+  "source": "monitoring-system",
+  "type": "server_down"
+}
+
+# Response
+{
+  "status": "received"
+}
 ```
 
 ## Future Improvements

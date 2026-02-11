@@ -77,6 +77,14 @@ func (h *EventHandler) HandleEvent(c *gin.Context) {
 	})
 }
 
+func (h *EventHandler) HandleHealth(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "healthy",
+		"service": "middleware",
+	})
+}
+
 func (h *EventHandler) RegisterRoutes(router *gin.Engine) {
+	router.GET("/health", h.HandleHealth)
 	router.POST("/integrations/events", h.HandleEvent)
 }
