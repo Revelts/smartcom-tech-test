@@ -820,10 +820,11 @@ POST /external/alerts
    - Request/response times, queue depth, worker utilization
    - Error rates and retry statistics
 
-3. **Health Checks**
-   - Liveness probes: `/health`
-   - Readiness probes: Check queue, worker pool, downstream dependencies
-   - Kubernetes-compatible endpoints
+3. **Advanced Health Checks** ✅ Basic `/health` endpoint implemented
+   - ✅ Basic liveness probes: `GET /health`
+   - 🔜 Readiness probes: Check queue depth, worker pool status, downstream dependencies
+   - 🔜 Detailed health metrics (queue size, active workers, success/failure rates)
+   - 🔜 Kubernetes-compatible liveness and readiness endpoints
 
 ### Security
 
